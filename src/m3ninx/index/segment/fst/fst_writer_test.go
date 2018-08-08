@@ -18,37 +18,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package fs
+package fst
 
 import (
-	"bytes"
+	"testing"
 
-	"github.com/cespare/xxhash"
+	"github.com/stretchr/testify/require"
 )
 
-// newFSTTermsOffsetsMap returns a new fstTermsOffsetsMap with default ctor parameters.
-func newFSTTermsOffsetsMap(initialSize int) *fstTermsOffsetsMap {
-	return _fstTermsOffsetsMapAlloc(_fstTermsOffsetsMapOptions{
-		hash: func(k []byte) fstTermsOffsetsMapHash {
-			return fstTermsOffsetsMapHash(xxhash.Sum64(k))
-		},
-		equals: func(f, g []byte) bool {
-			return bytes.Equal(f, g)
-		},
-		copy:        undefinedFSTTermsOffsetsMapCopyFn,
-		finalize:    undefinedFSTTermsOffsetsMapFinalizeFn,
-		initialSize: initialSize,
-	})
-}
+func TestFstWriterNoPanic(t *testing.T) {
+	w := newFSTWriter()
+	_, err := w.Write(nil)
+	require.Error(t, err)
 
-var undefinedFSTTermsOffsetsMapCopyFn fstTermsOffsetsMapCopyFn = func([]byte) []byte {
-	// NB: intentionally not defined to force users of the map to not
-	// allocate extra copies.
-	panic("not implemented")
-}
+	err = w.Add(nil, 0)
+	require.Error(t, err)
 
-var undefinedFSTTermsOffsetsMapFinalizeFn fstTermsOffsetsMapFinalizeFn = func([]byte) {
-	// NB: intentionally not defined to force users of the map to not
-	// allocate extra copies.
-	panic("not implemented")
+	_, err = w.Close()
+	require.Error(t, err)
 }
